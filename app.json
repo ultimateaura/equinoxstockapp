@@ -3,12 +3,7 @@
     "name": "trial-stocks-app",
     "slug": "trial-stocks-app",
     "version": "1.0.0",
-    "extra": {
-      "GEMINI_API_KEY": "AIzaSyCnxv_KQwefJ5ZmtjiuSR3pUboHzvIN_78",
-            "FINNHUB_API_KEY": "d3olli1r01quo6o4u7c0d3olli1r01quo6o4u7cg",
-            
-            
-    },
+    "extra": {},
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "trialstocksapp",

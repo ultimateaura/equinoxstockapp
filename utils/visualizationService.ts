@@ -1,11 +1,12 @@
 import { ChartData, ChartType, DEFAULT_STYLE, VisualizationConfig } from '@/types/visualization';
 import { GoogleGenAI } from '@google/genai';
 import { Holding } from '../contexts/HoldingsContext';
+import Constants from 'expo-constants';
 import { ImageGenerationRequest, imageGenerationService } from './imageGenerationService';
 import { ComprehensivePortfolioContext } from './portfolioContextService';
 import { visualizationIntentService } from './visualizationIntentService';
 
-const API_KEY = 'AIzaSyCnxv_KQwefJ5ZmtjiuSR3pUboHzvIN_78';
+const API_KEY = (Constants.expoConfig?.extra as any)?.GEMINI_API_KEY || 'demo';
 const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export class VisualizationService {

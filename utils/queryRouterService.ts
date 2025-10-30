@@ -1,7 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { aiService } from './aiService';
+import Constants from 'expo-constants';
 
-const API_KEY = 'AIzaSyCnxv_KQwefJ5ZmtjiuSR3pUboHzvIN_78';
+const API_KEY = (Constants.expoConfig?.extra as any)?.GEMINI_API_KEY || '';
 const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export interface QueryRoutingDecision {

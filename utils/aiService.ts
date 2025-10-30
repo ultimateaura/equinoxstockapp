@@ -1,10 +1,11 @@
 import { GoogleGenAI } from '@google/genai';
 import { NewsItem } from '../components/NewsCard';
+import Constants from 'expo-constants';
 import { CompanyTickerMappingService } from './companyTickerMapping';
 import { dataFetcherService, FetchedData } from './dataFetcherService';
 import { queryRouterService, QueryRoutingDecision } from './queryRouterService';
 
-const API_KEY = 'AIzaSyCnxv_KQwefJ5ZmtjiuSR3pUboHzvIN_78';
+const API_KEY = (Constants.expoConfig?.extra as any)?.GEMINI_API_KEY || '';
 const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 interface EnrichedContext {
