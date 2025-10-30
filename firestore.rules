@@ -1,0 +1,68 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can only read and write their own user document
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Validate user document structure
+      allow create: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserDocument(request.resource.data);
+      
+      allow update: if request.auth != null 
+        && request.auth.uid == userId
+        && validateUserDocumentUpdate(request.resource.data);
+    }
+    
+    // AI Conversations - users can only access their own conversations
+    match /ai_conversations/{conversationId} {
+      allow read, write: if request.auth != null 
+        && (request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId);
+    }
+    
+    // Investment Plans - users can only access their own plans
+    match /investment_plans/{planId} {
+      allow read, write: if request.auth != null 
+        && (request.auth.uid == resource.data.userId || request.auth.uid == request.resource.data.userId);
+    }
+    
+    // Helper functions for validation
+    function validateUserDocument(data) {
+      return data.keys().hasAll(['name', 'email', 'createdAt'])
+        && data.name is string
+        && data.email is string
+        && data.createdAt is timestamp
+        && data.name.size() > 0
+        && data.email.matches('.*@.*\\..*');
+    }
+    
+    function validateUserDocumentUpdate(data) {
+      return data.keys().hasAny(['name', 'email', 'avatarUrl', 'favorites', 'holdings', 'settings'])
+        && (!('name' in data) || (data.name is string && data.name.size() > 0))
+        && (!('email' in data) || (data.email is string && data.email.matches('.*@.*\\..*')))
+        && (!('avatarUrl' in data) || data.avatarUrl is string)
+        && (!('favorites' in data) || data.favorites is list)
+        && (!('holdings' in data) || data.holdings is list)
+        && (!('settings' in data) || data.settings is map);
+    }
+    
+    function validateAIConversationDocument(data) {
+      return data.keys().hasAll(['userId', 'title', 'messages', 'context', 'createdAt', 'updatedAt'])
+        && data.userId is string
+        && data.title is string
+        && data.messages is list
+        && data.context is map
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp
+        && data.userId.size() > 0
+        && data.title.size() > 0
+        && data.messages.size() > 0;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
