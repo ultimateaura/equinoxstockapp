@@ -120,44 +120,11 @@ export class LearningResourcesService {
       id: 'advanced-2',
       title: 'Quantitative Analysis',
       description: 'Using mathematical models in investment decisions',
-      type: 'tutorial',
+      type: 'article',
       difficulty: 'advanced',
       duration: 40,
-      topics: ['quantitative', 'models', 'statistics'],
+      topics: ['quantitative', 'models', 'algorithms'],
       prerequisites: ['intermediate-2']
-    },
-    {
-      id: 'intel-pca',
-      title: 'What is Portfolio DNA?',
-      description: 'How principal component analysis shows the themes that move your holdings together',
-      type: 'glossary',
-      difficulty: 'beginner',
-      duration: 8,
-      topics: ['pca', 'portfolio', 'diversification', 'correlation'],
-      content:
-        'Portfolio DNA uses PCA: we look at how your stocks move together and find a few main themes. The biggest theme is often “the whole market.” Secondary themes can be growth vs defensive or sector tilts.',
-    },
-    {
-      id: 'intel-mc',
-      title: 'What-If Monte Carlo for Beginners',
-      description: 'Why a range of outcomes is more honest than a single forecast',
-      type: 'article',
-      difficulty: 'beginner',
-      duration: 10,
-      topics: ['monte-carlo', 'risk', 'simulation'],
-      content:
-        'Monte Carlo simulation draws thousands of possible futures using your portfolio’s historical volatility. The wide band (pessimistic to optimistic) is the point — markets are uncertain.',
-    },
-    {
-      id: 'intel-regime',
-      title: 'Calm vs Turbulent Markets',
-      description: 'Volatility regimes and how your portfolio behaved in past rough patches',
-      type: 'glossary',
-      difficulty: 'intermediate',
-      duration: 12,
-      topics: ['volatility', 'hmm', 'regimes'],
-      content:
-        'Markets switch between calm and turbulent moods. A Hidden Markov Model estimates which mood we are in now, then we look back at how your holdings behaved in earlier turbulent stretches.',
     },
     
     // Tools and Calculators

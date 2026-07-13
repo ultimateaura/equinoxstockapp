@@ -17,27 +17,24 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
     {
       id: 1,
       title: 'Welcome to Equinox',
-      subtitle: 'Your portfolio, explained',
-      description:
-        'Equinox is a third-party interpreter — not a brokerage. Add holdings from your account and we turn serious quant math into plain English.',
+      subtitle: 'Your personal stock trading companion',
+      description: 'Track your favorite stocks, analyze market trends, and make informed investment decisions.',
       image: require('@/assets/images/logo.png'),
       backgroundColor: '#17bf2d',
     },
     {
       id: 2,
-      title: 'See the math behind the story',
-      subtitle: 'DNA, what-ifs & regimes',
-      description:
-        'Portfolio DNA (PCA), Monte Carlo what-if ranges, and calm/turbulent market regimes — tools pros use, designed for beginners.',
+      title: 'Discover Stocks',
+      subtitle: 'Explore the market',
+      description: 'Search and discover new investment opportunities with real-time market data and insights.',
       image: require('@/assets/images/logo.png'),
       backgroundColor: '#1e1e22',
     },
     {
       id: 3,
-      title: 'Learn your own patterns',
-      subtitle: 'Behavior over time',
-      description:
-        'As you use Equinox, we notice habits like selling into dips — so the AI recommendations feel credible, not mysterious.',
+      title: 'Track Your Portfolio',
+      subtitle: 'Monitor your investments',
+      description: 'Keep track of your holdings, analyze performance, and get personalized recommendations.',
       image: require('@/assets/images/logo.png'),
       backgroundColor: '#2a2a2e',
     },
