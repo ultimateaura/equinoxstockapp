@@ -1,11 +1,13 @@
 import { GoogleGenAI } from '@google/genai';
 import { NewsItem } from '../components/NewsCard';
-import Constants from 'expo-constants';
+import { getGeminiApiKey } from './env';
 import { CompanyTickerMappingService } from './companyTickerMapping';
 import { dataFetcherService, FetchedData } from './dataFetcherService';
 import { queryRouterService, QueryRoutingDecision } from './queryRouterService';
+import { recommendationService } from './recommendationService';
+import { StockRecommendation } from './quant/types';
 
-const API_KEY = (Constants.expoConfig?.extra as any)?.GEMINI_API_KEY || '';
+const API_KEY = getGeminiApiKey();
 const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 interface EnrichedContext {
@@ -18,6 +20,7 @@ interface EnrichedContext {
   dataSources: string[];
   routingDecision?: QueryRoutingDecision;
   fetchedData?: FetchedData;
+  recommendations?: StockRecommendation[];
 }
 
 /**
@@ -202,6 +205,31 @@ export class AIService {
           enrichedContext.dataSources.push('Recent News');
         }
       }
+
+      // Attach the quant + ML recommendation(s) so the AI explains (not invents)
+      // the signal. Limit to a few tickers to keep latency reasonable.
+      const recTickers = (
+        routingDecision.tickers.length > 0
+          ? routingDecision.tickers
+          : baseContext?.data?.ticker
+          ? [baseContext.data.ticker]
+          : []
+      ).slice(0, 3);
+
+      if (recTickers.length > 0) {
+        const recs = await Promise.all(
+          recTickers.map((t: string) =>
+            recommendationService.getRecommendation(t).catch(() => null)
+          )
+        );
+        const valid = recs.filter(
+          (r): r is StockRecommendation => !!r && r.dataQuality !== 'insufficient'
+        );
+        if (valid.length > 0) {
+          enrichedContext.recommendations = valid;
+          enrichedContext.dataSources.push('Quant + ML Model');
+        }
+      }
       
       // Add screen-specific context markers
       if (baseContext.screen === 'portfolio') {
@@ -279,15 +307,21 @@ export class AIService {
   private buildSystemInstruction(enrichedContext: EnrichedContext): string {
     const baseContext = enrichedContext.originalContext;
     
-    let instruction = `You are a knowledgeable stock market advisor. 
+    const recommendationsBlock = this.buildRecommendationsBlock(enrichedContext);
+
+    let instruction = `You are the explainer for an algorithmic stock recommendation engine.
+The app computes its OWN Buy/Hold/Watch signal using quantitative factors plus an
+on-device machine-learning model. Your job is to translate that math into plain,
+beginner-friendly language - NOT to produce your own independent rating.
 
 **CRITICAL RULES**:
-1. NEVER provide current stock prices, quotes, or real-time data
-2. Real-time data is shown in StockCards and NewsCards above your response
-3. Your role is to ANALYZE and INTERPRET the data shown in cards
-4. Provide insights, context, recommendations, and education
-5. Reference the cards naturally: "As shown in the data above..." or "Based on the current price..."
-6. Keep responses concise (2-3 sentences max)
+1. NEVER provide current stock prices, quotes, or real-time data (cards show those)
+2. If a quant + ML signal is provided below, EXPLAIN it: what the score and factors mean, why the signal is what it is. Do NOT contradict it or invent a different buy/sell call.
+3. Always frame output as a "recommendation, not financial advice"
+4. Translate jargon (momentum, volatility, Sharpe, beta) into simple terms a beginner understands
+5. Keep responses concise (2-4 sentences) unless the user asks to go deeper
+6. If no signal is provided, give general education only - never a personalized buy/sell call
+${recommendationsBlock}
 
 **CONTEXT**:
 - Screen: ${baseContext.screen}
@@ -313,6 +347,31 @@ ${enrichedContext.fetchedData?.news && enrichedContext.fetchedData.news.length >
   }
 
   /**
+   * Format the quant + ML recommendation(s) into the system prompt so the model
+   * can explain them in plain language.
+   */
+  private buildRecommendationsBlock(enrichedContext: EnrichedContext): string {
+    const recs = enrichedContext.recommendations;
+    if (!recs || recs.length === 0) return '';
+
+    const lines = recs.map((r) => {
+      const factorBits = (Object.keys(r.factors) as (keyof typeof r.factors)[])
+        .map((k) => `${k}=${Math.round(r.factors[k])}`)
+        .join(', ');
+      const mlBit =
+        r.mlScore != null && r.ml
+          ? ` ML score ${r.mlScore} (${Math.round(r.ml.probability * 100)}% chance it beats the market over ~1 month).`
+          : '';
+      return `- ${r.ticker}: signal ${r.signal}, blended score ${r.score}/100 (factor model ${r.classicalScore}, confidence ${r.confidence}%). Factors [0-100, higher=better]: ${factorBits}.${mlBit}`;
+    });
+
+    return `
+
+**QUANT + ML SIGNAL (explain this, do not override it)**:
+${lines.join('\n')}`;
+  }
+
+  /**
    * Generate proactive suggestions based on context
    */
   async generateSuggestions(context: any): Promise<string[]> {
@@ -320,10 +379,10 @@ ${enrichedContext.fetchedData?.news && enrichedContext.fetchedData.news.length >
     
     if (context.screen === 'stock-detail') {
       suggestions.push(
-        "What's your analysis of this stock?",
-        "Should I buy, hold, or sell?",
-        "What are the risks I should consider?",
-        "How does this fit in a diversified portfolio?"
+        "Explain this stock's quant + ML signal",
+        "Why did the model give this score?",
+        "What do the momentum and volatility factors mean here?",
+        "What are the risks I should consider?"
       );
     } else if (context.screen === 'portfolio') {
       suggestions.push(

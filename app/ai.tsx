@@ -12,7 +12,7 @@ import { ComprehensivePortfolioContext, portfolioContextService } from '@/utils/
 import { stockApiService } from '@/utils/stockApi';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { GoogleGenAI } from "@google/genai";
-import Constants from 'expo-constants';
+import { getGeminiApiKey } from '../utils/env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -30,7 +30,7 @@ interface ContextInfo {
 type ChatMessage = ServiceChatMessage;
 
 export default function AIScreen() {
-  const ai = new GoogleGenAI({ apiKey: (Constants.expoConfig?.extra as any)?.GEMINI_API_KEY || '' });
+  const ai = new GoogleGenAI({ apiKey: getGeminiApiKey() });
   const { currentConversation, conversations, saveMessage, startNewConversation, updateConversationContext, loadUserConversations, loadConversation, error: conversationError, clearError } = useAIConversation();
   const [message, setMessage] = React.useState("");
   const [chat, setChat] = React.useState<ChatMessage[]>([]);

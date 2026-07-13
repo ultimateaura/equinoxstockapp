@@ -7,6 +7,7 @@ export default {
     extra: {
       GEMINI_API_KEY: process.env.GEMINI_API_KEY,
       FINNHUB_API_KEY: process.env.FINNHUB_API_KEY,
+      ALPHA_VANTAGE_API_KEY: process.env.ALPHA_VANTAGE_API_KEY,
     },
     orientation: "portrait",
     icon: "./assets/images/icon.png",

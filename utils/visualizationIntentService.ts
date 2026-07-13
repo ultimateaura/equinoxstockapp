@@ -1,8 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
-import { ChartType, VisualizationType } from '../types/visualization';
-import Constants from 'expo-constants';
+import { ChartType, VisualizationType } from '@/types/visualization';
+import { getGeminiApiKey } from './env';
 
-const API_KEY = (Constants.expoConfig?.extra as any)?.GEMINI_API_KEY || '';
+const API_KEY = getGeminiApiKey();
 const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export interface VisualizationIntent {

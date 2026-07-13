@@ -2,6 +2,7 @@ import VisualizeScreen from '@/app/visualize';
 import { AddHoldingModal } from '@/components/AddHoldingModal';
 import { EditPlanModal } from '@/components/EditPlanModal';
 import { HoldingCard } from '@/components/HoldingCard';
+import { PortfolioOptimizationCard } from '@/components/PortfolioOptimizationCard';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { useHoldings } from '@/contexts/HoldingsContext';
 import { InvestmentPlan, useInvestmentPlans } from '@/contexts/InvestmentPlansContext';
@@ -132,6 +133,21 @@ export default function PortfolioScreen() {
 
        
       </View>
+
+      {/* Quant Portfolio Optimizer */}
+      {holdings.length >= 2 && (
+        <View style={styles.plansSection}>
+          <PortfolioOptimizationCard
+            holdings={holdings.map((h) => {
+              const totalQuantity =
+                h.purchaseLots?.reduce((sum: number, lot: any) => sum + lot.quantity, 0) ||
+                h.quantity ||
+                0;
+              return { ticker: h.ticker, value: totalQuantity * h.currentPrice };
+            })}
+          />
+        </View>
+      )}
 
       {/* Investment Plans Section */}
       <View style={styles.plansSection}>

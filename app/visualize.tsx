@@ -161,7 +161,7 @@ export default function VisualizeScreen({ embedded }: VisualizeScreenProps = {})
       let config: VisualizationConfig;
       
       // First, classify the user's intent to determine if we need image generation
-      const { visualizationIntentService } = await import('../utils/visualizationIntentService');
+      const { visualizationIntentService } = await import('@/utils/visualizationIntentService');
       const intent = await visualizationIntentService.classifyPrompt(prompt);
       
       // Store the intent type for display logic

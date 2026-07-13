@@ -1,8 +1,8 @@
-import Constants from 'expo-constants';
+import { getFinnhubApiKey } from './env';
 import { NewsItem } from '../components/NewsCard';
 import { CompanyTickerMappingService } from './companyTickerMapping';
 
-const FINNHUB_API_KEY = Constants.expoConfig?.extra?.FINNHUB_API_KEY || 'demo';
+const FINNHUB_API_KEY = getFinnhubApiKey() || 'demo';
 const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
 
 export interface FinnhubNewsResponse {

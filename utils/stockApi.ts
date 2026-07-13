@@ -6,7 +6,7 @@ import {
     StockQuote
 } from '@/types/stock';
 import axios, { AxiosInstance } from 'axios';
-import Constants from 'expo-constants';
+import { getFinnhubApiKey } from './env';
 import { cacheService } from './cacheService';
 import { errorHandler } from './errorHandler';
 import { logoService } from './logoService';
@@ -15,9 +15,12 @@ class StockApiService {
   private api: AxiosInstance;
   private readonly baseURL = 'https://finnhub.io/api/v1';
   private readonly timeout = 10000; // 10 seconds
+  private readonly apiKey: string;
+  private profileAllowed: boolean = true;
 
   constructor() {
-    const apiKey = Constants.expoConfig?.extra?.FINNHUB_API_KEY || 'demo';
+    const apiKey = getFinnhubApiKey() || 'demo';
+    this.apiKey = apiKey;
 
     this.api = axios.create({
       baseURL: this.baseURL,
@@ -30,6 +33,11 @@ class StockApiService {
     // Add request interceptor for logging
     this.api.interceptors.request.use(
       (config) => {
+        // Always ensure token is present even when per-request params are set
+        config.params = {
+          ...(config.params || {}),
+          token: this.apiKey,
+        };
         console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
         return config;
       },
@@ -183,8 +191,13 @@ class StockApiService {
         timestamp: Date.now(),
       };
 
-    } catch (error) {
-      console.error(`Failed to fetch profile for ${symbol}:`, error);
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        this.profileAllowed = false;
+        console.warn('Finnhub profile endpoint returned 401. Disabling further profile requests for this session.');
+      } else {
+        console.error(`Failed to fetch profile for ${symbol}:`, error);
+      }
       return {
         success: false,
         error: errorHandler.getUserFriendlyMessage(error),
@@ -250,8 +263,8 @@ class StockApiService {
         };
       }
 
-      // Fetch both quote and profile data in parallel
-      const [quoteResponse, profileResponse] = await Promise.allSettled([
+      // Fetch quote (and profile only if allowed) in parallel
+      const promises: Promise<any>[] = [
         errorHandler.retryWithBackoff(async () => {
           const response = await this.api.get(`/quote`, {
             params: { symbol: symbol.toUpperCase() },
@@ -262,14 +275,20 @@ class StockApiService {
           }
           
           return response.data;
-        }),
-        this.getStockProfile(symbol)
-      ]);
+        })
+      ];
+      if (this.profileAllowed) {
+        promises.push(this.getStockProfile(symbol));
+      }
+      const results = await Promise.allSettled(promises);
 
-      const quoteData = quoteResponse.status === 'fulfilled' ? quoteResponse.value : null;
-      const profileData = profileResponse.status === 'fulfilled' && profileResponse.value.success 
-        ? profileResponse.value.data 
-        : null;
+      const quoteResult = results[0];
+      const quoteData = quoteResult.status === 'fulfilled' ? quoteResult.value : null;
+      const profileResult = this.profileAllowed ? results[1] : undefined;
+      const profileData =
+        profileResult && profileResult.status === 'fulfilled' && profileResult.value.success
+          ? profileResult.value.data
+          : null;
 
       if (!quoteData) {
         throw new Error('Stock not found');
@@ -711,18 +730,10 @@ class StockApiService {
         console.log(`Using cached ${allSymbols.length} US stock symbols for trending analysis`);
       }
 
-      // Get real-time data and profiles for all fetched stocks in parallel
-      const [batchQuotesResponse, batchProfilesResponse] = await Promise.allSettled([
-        this.getBatchQuotes(allSymbols),
-        this.getBatchProfiles(allSymbols)
-      ]);
-      
-      const batchQuotes = batchQuotesResponse.status === 'fulfilled' && batchQuotesResponse.value.success 
-        ? batchQuotesResponse.value.data 
-        : {};
-      const batchProfiles = batchProfilesResponse.status === 'fulfilled' && batchProfilesResponse.value.success 
-        ? batchProfilesResponse.value.data 
-        : {};
+      // Get real-time data (quotes) for all fetched stocks
+      // Note: getStockQuote already fetches profile data internally, so we do NOT fetch profiles again
+      const batchQuotesResponse = await this.getBatchQuotes(allSymbols);
+      const batchQuotes = batchQuotesResponse.success ? batchQuotesResponse.data || {} : {};
 
       if (!batchQuotes || Object.keys(batchQuotes).length === 0) {
         console.log('Failed to fetch trending stocks data, using fallback popular stocks');
@@ -794,13 +805,11 @@ class StockApiService {
             const isReasonablePrice = quote.regularMarketPrice >= 5;
 
             if (hasSignificantChange && hasHighVolume && isReasonablePrice) {
-              const profile = batchProfiles?.[symbol];
-              
               // Create SearchResult from quote data with actual company names
               const trendingStock: SearchResult = {
                 symbol: symbol,
-                shortName: profile?.name || symbol,
-                longName: profile?.name || symbol,
+                shortName: quote.shortName || symbol,
+                longName: quote.longName || symbol,
                 exchange: 'NASDAQ',
                 type: 'EQUITY',
                 region: 'US',
@@ -813,7 +822,7 @@ class StockApiService {
                 regularMarketChange: quote.regularMarketChange || 0,
                 regularMarketChangePercent: quote.regularMarketChangePercent || 0,
                 regularMarketTime: new Date().toISOString(),
-                marketCap: profile?.marketCapitalization || quote.marketCap || 0,
+                marketCap: quote.marketCap || 0,
                 logoUrl: undefined, // Will be filled by logo service
               };
 
@@ -834,13 +843,12 @@ class StockApiService {
         for (const symbol of allSymbols) {
           if (batchQuotes[symbol]) {
             const quote = batchQuotes[symbol];
-            const profile = batchProfiles?.[symbol];
             
             if (quote.regularMarketPrice && quote.regularMarketPrice >= 5) {
               allStocks.push({
                 symbol: symbol,
-                shortName: profile?.name || symbol,
-                longName: profile?.name || symbol,
+                shortName: quote.shortName || symbol,
+                longName: quote.longName || symbol,
                 exchange: 'NASDAQ',
                 type: 'EQUITY',
                 region: 'US',
@@ -853,7 +861,7 @@ class StockApiService {
                 regularMarketChange: quote.regularMarketChange || 0,
                 regularMarketChangePercent: quote.regularMarketChangePercent || 0,
                 regularMarketTime: new Date().toISOString(),
-                marketCap: profile?.marketCapitalization || quote.marketCap || 0,
+                marketCap: quote.marketCap || 0,
                 logoUrl: undefined,
               });
             }

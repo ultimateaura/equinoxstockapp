@@ -1,4 +1,6 @@
+import { QuantScoreCard } from '@/components/QuantScoreCard';
 import { StockCard } from '@/components/StockCard';
+import { TopPicksScreener } from '@/components/TopPicksScreener';
 import { useFavorites } from '@/contexts/FavoritesContext';
 import { SearchResult } from '@/types/stock';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -403,6 +405,14 @@ export default function DiscoverScreen() {
               </Text>
             </View>
 
+            {/* Quant + ML recommendation */}
+            <View style={styles.statsContainer}>
+              <QuantScoreCard
+                ticker={selectedStock.symbol}
+                companyName={selectedStock.longName || selectedStock.shortName}
+              />
+            </View>
+
             {/* Market Stats Grid */}
             <View style={styles.statsContainer}>
               <Text style={styles.sectionTitle}>Market Statistics</Text>
@@ -628,6 +638,17 @@ export default function DiscoverScreen() {
                 keyExtractor={(item) => `${item.symbol}-trending`}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.verticalList}
+                ListHeaderComponent={
+                  trendingStocks.length > 0 ? (
+                    <TopPicksScreener
+                      tickers={trendingStocks.map((s) => s.symbol)}
+                      onSelect={(ticker) => {
+                        const match = trendingStocks.find((s) => s.symbol === ticker);
+                        if (match) handleStockPress(match);
+                      }}
+                    />
+                  ) : null
+                }
                 refreshControl={
                   <RefreshControl
                     refreshing={isRefreshing}
