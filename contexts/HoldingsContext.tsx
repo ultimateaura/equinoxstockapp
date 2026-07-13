@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { db } from '../config/firebase';
 import { logoService } from '../utils/logoService';
 import { stockApiService } from '../utils/stockApi';
+import { tradeEventsService } from '../utils/tradeEventsService';
 import { useAuth } from './AuthContext';
 
 export interface PurchaseLot {
@@ -157,6 +158,8 @@ export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({ children }) 
 
   const addPurchaseLot = async (ticker: string, lot: PurchaseLot) => {
     const existingHolding = holdings.find(h => h.ticker === ticker);
+    const eventType = existingHolding ? 'ADD_LOT' : 'BUY';
+
     if (existingHolding) {
       // Add to existing holding
       const updatedPurchaseLots = [...(existingHolding.purchaseLots || []), lot];
@@ -218,6 +221,19 @@ export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({ children }) 
         setHoldings(updatedHoldings);
         await saveHoldingsToFirestore(updatedHoldings);
       }
+    }
+
+    // Fire-and-forget behavior ledger (does not block holdings save)
+    if (user?.uid) {
+      tradeEventsService
+        .logTradeEvent({
+          userId: user.uid,
+          type: eventType,
+          ticker,
+          quantity: lot.quantity,
+          price: lot.purchasePrice,
+        })
+        .catch(() => {});
     }
   };
 
@@ -341,9 +357,26 @@ export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({ children }) 
   };
 
   const removeHolding = async (ticker: string) => {
+    const existing = holdings.find((h) => h.ticker === ticker);
+    const qty =
+      existing?.purchaseLots?.reduce((s, l) => s + l.quantity, 0) ||
+      existing?.quantity ||
+      0;
+    const price = existing?.currentPrice || 0;
     const updatedHoldings = holdings.filter(holding => holding.ticker !== ticker);
     setHoldings(updatedHoldings);
     await saveHoldingsToFirestore(updatedHoldings);
+    if (user?.uid && existing) {
+      tradeEventsService
+        .logTradeEvent({
+          userId: user.uid,
+          type: 'REMOVE_HOLDING',
+          ticker,
+          quantity: qty,
+          price,
+        })
+        .catch(() => {});
+    }
   };
 
   const updateHolding = async (updatedHolding: Holding) => {
@@ -355,9 +388,26 @@ export const HoldingsProvider: React.FC<HoldingsProviderProps> = ({ children }) 
   };
 
   const deleteHolding = async (ticker: string) => {
+    const existing = holdings.find((h) => h.ticker === ticker);
+    const qty =
+      existing?.purchaseLots?.reduce((s, l) => s + l.quantity, 0) ||
+      existing?.quantity ||
+      0;
+    const price = existing?.currentPrice || 0;
     const updatedHoldings = holdings.filter(holding => holding.ticker !== ticker);
     setHoldings(updatedHoldings);
     await saveHoldingsToFirestore(updatedHoldings);
+    if (user?.uid && existing) {
+      tradeEventsService
+        .logTradeEvent({
+          userId: user.uid,
+          type: 'SELL',
+          ticker,
+          quantity: qty,
+          price,
+        })
+        .catch(() => {});
+    }
   };
 
   const getHolding = (ticker: string) => {

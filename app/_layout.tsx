@@ -20,6 +20,7 @@ import { HoldingsProvider } from '@/contexts/HoldingsContext';
 import { InvestmentPlansProvider } from '@/contexts/InvestmentPlansContext';
 import { OnboardingProvider, useOnboarding } from '@/contexts/OnboardingContext';
 import { SettingsProvider } from '@/contexts/SettingsContext';
+import { TradeEventsProvider } from '@/contexts/TradeEventsContext';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -121,30 +122,32 @@ function AuthenticatedApp() {
     <SettingsProvider>
       <FavoritesProvider>
         <HoldingsProvider>
-          <InvestmentPlansProvider>
-            <AIConversationProvider>
-            <PaperProvider theme={theme}>
-              <ThemeProvider value={DarkTheme}>
-                <View style={{ flex: 1 }}>
-                  <Stack
-                    screenOptions={{
-                      animation: 'slide_from_right',
-                      animationDuration: 300,
-                    }}
-                  >
-                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                    
-                    <Stack.Screen name="ai" options={{ headerShown: false }} />
-                    <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
-                    <Stack.Screen name="holding-management" options={{ headerShown: false }} />
-                    <Stack.Screen name="visualize" options={{ headerShown: false }} />
-                    <Stack.Screen name="ai-settings" options={{ headerShown: false }} />
-                  </Stack>
-                </View>
-              </ThemeProvider>
-            </PaperProvider>
-            </AIConversationProvider>
-          </InvestmentPlansProvider>
+          <TradeEventsProvider>
+            <InvestmentPlansProvider>
+              <AIConversationProvider>
+              <PaperProvider theme={theme}>
+                <ThemeProvider value={DarkTheme}>
+                  <View style={{ flex: 1 }}>
+                    <Stack
+                      screenOptions={{
+                        animation: 'slide_from_right',
+                        animationDuration: 300,
+                      }}
+                    >
+                      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                      
+                      <Stack.Screen name="ai" options={{ headerShown: false }} />
+                      <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
+                      <Stack.Screen name="holding-management" options={{ headerShown: false }} />
+                      <Stack.Screen name="visualize" options={{ headerShown: false }} />
+                      <Stack.Screen name="ai-settings" options={{ headerShown: false }} />
+                    </Stack>
+                  </View>
+                </ThemeProvider>
+              </PaperProvider>
+              </AIConversationProvider>
+            </InvestmentPlansProvider>
+          </TradeEventsProvider>
         </HoldingsProvider>
       </FavoritesProvider>
     </SettingsProvider>
