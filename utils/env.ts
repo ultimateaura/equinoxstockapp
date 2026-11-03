@@ -1,51 +1,10 @@
-import Constants from 'expo-constants';
+// Third-party API keys (Gemini, Finnhub, Alpha Vantage) never live in the app:
+// anything Expo bundles can be extracted from a build. They are secrets on the
+// API proxy in proxy/ instead, and the app only needs the proxy's URL.
 
-type Extra = {
-  FINNHUB_API_KEY?: string;
-  GEMINI_API_KEY?: string;
-  ALPHA_VANTAGE_API_KEY?: string;
-  [key: string]: any;
-};
-
-// Keys come only from .env (via app.config.ts `extra`). Never hardcode them
-// here: anything committed to git ends up public. See .env.example.
-
-function getExtra(): Extra {
-  // Works in dev with Expo Go
-  const fromExpoConfig = Constants.expoConfig?.extra as Extra | undefined;
-  // Works in production builds with newer Expo (manifest2)
-  const fromManifest2 = (Constants as any).manifest2?.extra as Extra | undefined;
-  // Legacy manifest fallback
-  const fromManifest = (Constants as any).manifest?.extra as Extra | undefined;
-  return fromExpoConfig ?? fromManifest2 ?? fromManifest ?? {};
+export function getApiProxyUrl(): string {
+  // Expo inlines EXPO_PUBLIC_* at build time; it must be read with this exact
+  // `process.env.EXPO_PUBLIC_...` expression for that to work.
+  const url = process.env.EXPO_PUBLIC_API_PROXY_URL || '';
+  return url.replace(/\/+$/, '');
 }
-
-export function getFinnhubApiKey(): string {
-  const extra = getExtra();
-  // Also allow EXPO_PUBLIC_ fallbacks if user opts for public envs
-  return (
-    extra.FINNHUB_API_KEY ||
-    (process.env as any)?.EXPO_PUBLIC_FINNHUB_API_KEY ||
-    ''
-  );
-}
-
-export function getGeminiApiKey(): string {
-  const extra = getExtra();
-  return (
-    extra.GEMINI_API_KEY ||
-    (process.env as any)?.EXPO_PUBLIC_GEMINI_API_KEY ||
-    ''
-  );
-}
-
-export function getAlphaVantageApiKey(): string {
-  const extra = getExtra();
-  return (
-    extra.ALPHA_VANTAGE_API_KEY ||
-    (process.env as any)?.EXPO_PUBLIC_ALPHA_VANTAGE_API_KEY ||
-    ''
-  );
-}
-
-

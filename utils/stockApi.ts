@@ -6,38 +6,29 @@ import {
     StockQuote
 } from '@/types/stock';
 import axios, { AxiosInstance } from 'axios';
-import { getFinnhubApiKey } from './env';
+import { proxyAuthHeaders, proxyUrl } from './apiProxy';
 import { cacheService } from './cacheService';
 import { errorHandler } from './errorHandler';
 import { logoService } from './logoService';
 
 class StockApiService {
   private api: AxiosInstance;
-  private readonly baseURL = 'https://finnhub.io/api/v1';
   private readonly timeout = 10000; // 10 seconds
-  private readonly apiKey: string;
   private profileAllowed: boolean = true;
 
   constructor() {
-    const apiKey = getFinnhubApiKey() || 'demo';
-    this.apiKey = apiKey;
-
+    // Finnhub goes through the API proxy, which holds the key server-side.
     this.api = axios.create({
-      baseURL: this.baseURL,
       timeout: this.timeout,
-      params: {
-        token: apiKey,
-      },
     });
 
-    // Add request interceptor for logging
+    // Add request interceptor for the proxy URL, auth and logging
     this.api.interceptors.request.use(
-      (config) => {
-        // Always ensure token is present even when per-request params are set
-        config.params = {
-          ...(config.params || {}),
-          token: this.apiKey,
-        };
+      async (config) => {
+        // Resolved per request so a missing proxy URL or signed-out user fails
+        // that call with a clear message instead of crashing at import time.
+        config.baseURL = proxyUrl('/finnhub');
+        config.headers.set(await proxyAuthHeaders());
         console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
         return config;
       },

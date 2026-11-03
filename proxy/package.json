@@ -1,0 +1,18 @@
+{
+  "name": "equinox-api-proxy",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "wrangler types && tsc --noEmit"
+  },
+  "dependencies": {
+    "jose": "6.2.15"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "wrangler": "4.157.0"
+  }
+}
