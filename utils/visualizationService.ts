@@ -1,13 +1,9 @@
 import { ChartData, ChartType, DEFAULT_STYLE, VisualizationConfig } from '@/types/visualization';
-import { GoogleGenAI } from '@google/genai';
 import { Holding } from '../contexts/HoldingsContext';
-import { getGeminiApiKey } from './env';
 import { ImageGenerationRequest, imageGenerationService } from './imageGenerationService';
 import { ComprehensivePortfolioContext } from './portfolioContextService';
 import { visualizationIntentService } from './visualizationIntentService';
 
-const API_KEY = getGeminiApiKey() || 'demo';
-const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export class VisualizationService {
   /**

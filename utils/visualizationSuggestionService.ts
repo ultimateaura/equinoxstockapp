@@ -1,10 +1,7 @@
-import { GoogleGenAI } from '@google/genai';
 import { ChartType, VisualizationType } from '../types/visualization';
 import { ComprehensivePortfolioContext } from './portfolioContextService';
-import { getGeminiApiKey } from './env';
+import { getGeminiClient } from './geminiClient';
 
-const API_KEY = getGeminiApiKey();
-const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export interface VisualizationSuggestion {
   type: VisualizationType;
@@ -24,7 +21,7 @@ export class VisualizationSuggestionService {
     try {
       const prompt = this.buildSuggestionPrompt(context);
       
-      const result = await genAI.models.generateContent({
+      const result = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: prompt }] }]
       });

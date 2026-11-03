@@ -7,9 +7,8 @@ type Extra = {
   [key: string]: any;
 };
 
-// Default Alpha Vantage key (free tier: 25 requests/day). Used as a keyed
-// fallback for historical prices when the primary source is unavailable.
-const DEFAULT_ALPHA_VANTAGE_KEY = 'RXEALUQFI81UXNGO';
+// Keys come only from .env (via app.config.ts `extra`). Never hardcode them
+// here: anything committed to git ends up public. See .env.example.
 
 function getExtra(): Extra {
   // Works in dev with Expo Go
@@ -45,7 +44,7 @@ export function getAlphaVantageApiKey(): string {
   return (
     extra.ALPHA_VANTAGE_API_KEY ||
     (process.env as any)?.EXPO_PUBLIC_ALPHA_VANTAGE_API_KEY ||
-    DEFAULT_ALPHA_VANTAGE_KEY
+    ''
   );
 }
 

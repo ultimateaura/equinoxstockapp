@@ -11,8 +11,7 @@ import { CompanyTickerMappingService } from '@/utils/companyTickerMapping';
 import { ComprehensivePortfolioContext, portfolioContextService } from '@/utils/portfolioContextService';
 import { stockApiService } from '@/utils/stockApi';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { GoogleGenAI } from "@google/genai";
-import { getGeminiApiKey } from '../utils/env';
+import { getGeminiClient } from '../utils/geminiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -30,7 +29,6 @@ interface ContextInfo {
 type ChatMessage = ServiceChatMessage;
 
 export default function AIScreen() {
-  const ai = new GoogleGenAI({ apiKey: getGeminiApiKey() });
   const { currentConversation, conversations, saveMessage, startNewConversation, updateConversationContext, loadUserConversations, loadConversation, error: conversationError, clearError } = useAIConversation();
   const [message, setMessage] = React.useState("");
   const [chat, setChat] = React.useState<ChatMessage[]>([]);
@@ -599,7 +597,7 @@ ${updatedContext.screen === 'news-article' ?
         parts: [{ text: message }]
       });
 
-      const response = await ai.models.generateContent({
+      const response = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash",
         contents: conversationHistory,
         config: {
