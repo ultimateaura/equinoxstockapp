@@ -1,9 +1,6 @@
-import { GoogleGenAI } from '@google/genai';
 import { ChartType, VisualizationType } from '@/types/visualization';
-import { getGeminiApiKey } from './env';
+import { getGeminiClient } from './geminiClient';
 
-const API_KEY = getGeminiApiKey();
-const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export interface VisualizationIntent {
   primaryType: VisualizationType;
@@ -55,7 +52,7 @@ Respond with valid JSON only:
   "confidenceScore": 0.95
 }`;
 
-      const result = await genAI.models.generateContent({
+      const result = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
       });

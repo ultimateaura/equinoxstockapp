@@ -1,9 +1,6 @@
-import { GoogleGenAI } from '@google/genai';
 import { Holding } from '../contexts/HoldingsContext';
-import { getGeminiApiKey } from './env';
+import { getGeminiClient } from './geminiClient';
 
-const API_KEY = getGeminiApiKey();
-const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export interface ImageGenerationRequest {
   prompt: string;
@@ -96,7 +93,7 @@ export class ImageGenerationService {
       
       for (const modelName of modelNames) {
         try {
-          const testResponse = await genAI.models.generateContent({
+          const testResponse = await getGeminiClient().models.generateContent({
             model: modelName,
             contents: "test"
           });
@@ -151,7 +148,7 @@ export class ImageGenerationService {
           await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
         }
 
-        const response = await genAI.models.generateContent({
+        const response = await getGeminiClient().models.generateContent({
           model: "gemini-2.5-flash-image-preview",
           contents: prompt,
         });
@@ -638,7 +635,7 @@ Respond with a JSON object containing SVG generation instructions:
   "style": "artistic style notes"
 }`;
 
-      const result = await genAI.models.generateContent({
+      const result = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: analysisPrompt }] }]
       });
@@ -1081,7 +1078,7 @@ Generate a short, specific prompt (under 200 words) that describes:
 
 Keep it concise but descriptive for accurate image generation.`;
 
-      const result = await genAI.models.generateContent({
+      const result = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: systemPrompt }] }]
       });
@@ -1107,7 +1104,7 @@ Keep it concise but descriptive for accurate image generation.`;
   async generateImage(prompt: string): Promise<GeneratedImage> {
     try {
       // Use Gemini 2.5 Flash native image generation
-      const response = await genAI.models.generateContent({
+      const response = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash-image-preview",
         contents: prompt,
       });

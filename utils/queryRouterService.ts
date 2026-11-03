@@ -1,9 +1,6 @@
-import { GoogleGenAI } from '@google/genai';
 import { aiService } from './aiService';
-import { getGeminiApiKey } from './env';
+import { getGeminiClient } from './geminiClient';
 
-const API_KEY = getGeminiApiKey();
-const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 export interface QueryRoutingDecision {
   category: 'stock_data' | 'news' | 'both' | 'neither';
@@ -72,7 +69,7 @@ Respond with ONLY a JSON object:
   "reasoning": "brief explanation"
 }`;
 
-    const result = await genAI.models.generateContent({
+    const result = await getGeminiClient().models.generateContent({
       model: "gemini-2.5-flash",
       contents: [{ role: 'user', parts: [{ text: prompt }] }]
     });

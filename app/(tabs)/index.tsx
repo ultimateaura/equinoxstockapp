@@ -251,7 +251,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.headerTitle}>Hi, {userName}</Text>
-          <Text style={styles.headerSubtitle}>Market pulse</Text>
+          <Text style={styles.headerSubtitle}>Let's start learning</Text>
         </View>
         <View style={styles.logoContainer}>
           <Image 

@@ -4,11 +4,8 @@ export default {
     name: "trial-stocks-app",
     slug: "trial-stocks-app",
     version: "1.0.0",
-    extra: {
-      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-      FINNHUB_API_KEY: process.env.FINNHUB_API_KEY,
-      ALPHA_VANTAGE_API_KEY: process.env.ALPHA_VANTAGE_API_KEY,
-    },
+    // No API keys here: everything in `extra` is bundled into the app. Third-party
+    // keys live on the API proxy (proxy/); the app reads EXPO_PUBLIC_API_PROXY_URL.
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "trialstocksapp",

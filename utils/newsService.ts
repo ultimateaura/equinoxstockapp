@@ -1,9 +1,9 @@
-import { getFinnhubApiKey } from './env';
+import { proxyFetch } from './apiProxy';
 import { NewsItem } from '../components/NewsCard';
 import { CompanyTickerMappingService } from './companyTickerMapping';
 
-const FINNHUB_API_KEY = getFinnhubApiKey() || 'demo';
-const FINNHUB_BASE_URL = 'https://finnhub.io/api/v1';
+// Finnhub via the API proxy, which adds the key server-side.
+const FINNHUB_PATH = '/finnhub';
 
 export interface FinnhubNewsResponse {
   category: string;
@@ -48,9 +48,7 @@ class NewsService {
    */
   async getGeneralNews(): Promise<NewsItem[]> {
     try {
-      const response = await fetch(
-        `${FINNHUB_BASE_URL}/news?category=general&token=${FINNHUB_API_KEY}`
-      );
+      const response = await proxyFetch(`${FINNHUB_PATH}/news?category=general`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -70,8 +68,8 @@ class NewsService {
    */
   async getCompanyNews(symbol: string): Promise<NewsItem[]> {
     try {
-      const response = await fetch(
-        `${FINNHUB_BASE_URL}/company-news?symbol=${symbol}&from=${this.getDateString(-7)}&to=${this.getDateString(0)}&token=${FINNHUB_API_KEY}`
+      const response = await proxyFetch(
+        `${FINNHUB_PATH}/company-news?symbol=${encodeURIComponent(symbol)}&from=${this.getDateString(-7)}&to=${this.getDateString(0)}`
       );
       
       if (!response.ok) {
@@ -113,9 +111,7 @@ class NewsService {
    */
   async getTrendingNews(): Promise<NewsItem[]> {
     try {
-      const response = await fetch(
-        `${FINNHUB_BASE_URL}/news?category=general&token=${FINNHUB_API_KEY}`
-      );
+      const response = await proxyFetch(`${FINNHUB_PATH}/news?category=general`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

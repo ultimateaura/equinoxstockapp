@@ -15,13 +15,14 @@
 import { PriceBar } from './quant/types';
 import { cacheService } from './cacheService';
 import { stockApiService } from './stockApi';
-import { getAlphaVantageApiKey } from './env';
+import { proxyFetch } from './apiProxy';
 
 const YAHOO_HOSTS = [
   'https://query1.finance.yahoo.com/v8/finance/chart/',
   'https://query2.finance.yahoo.com/v8/finance/chart/',
 ];
-const ALPHA_VANTAGE_URL = 'https://www.alphavantage.co/query';
+// Alpha Vantage via the API proxy, which adds the key server-side.
+const ALPHA_VANTAGE_PATH = '/alphavantage';
 const CACHE_MS = 24 * 60 * 60 * 1000; // 24h
 const HISTORY_CACHE_PREFIX = 'mds:hist:';
 
@@ -145,12 +146,10 @@ class MarketDataService {
    */
   private async fetchFromAlphaVantage(symbol: string): Promise<PriceBar[]> {
     try {
-      const key = getAlphaVantageApiKey();
-      if (!key) return [];
-      const url =
-        `${ALPHA_VANTAGE_URL}?function=TIME_SERIES_DAILY` +
-        `&symbol=${encodeURIComponent(symbol)}&outputsize=full&apikey=${key}`;
-      const res = await fetch(url);
+      const res = await proxyFetch(
+        `${ALPHA_VANTAGE_PATH}?function=TIME_SERIES_DAILY` +
+          `&symbol=${encodeURIComponent(symbol)}&outputsize=full`
+      );
       if (!res.ok) {
         console.warn(`AlphaVantage ${symbol} HTTP ${res.status}`);
         return [];

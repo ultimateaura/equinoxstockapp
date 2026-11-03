@@ -7,142 +7,186 @@ import { Text } from 'react-native-paper';
 
 import { useColorScheme } from '@/components/useColorScheme';
 
-type TabDef = {
-  name: string;
-  label: string;
-  icon: React.ComponentProps<typeof FontAwesome>['name'];
-};
 
-/** Portfolio-first order: My Portfolio | Market | Ask AI | Discover | Account */
-const LEFT_TABS: TabDef[] = [
-  { name: 'portfolio', label: 'My Portfolio', icon: 'briefcase' },
-  { name: 'index', label: 'Market', icon: 'line-chart' },
-];
-const RIGHT_TABS: TabDef[] = [
-  { name: 'discover', label: 'Discover', icon: 'compass' },
-  { name: 'settings', label: 'Account', icon: 'user' },
-];
-
-function CustomTabBar({ state, navigation }: any) {
+// Custom Tab Bar Component matching Figma design
+function CustomTabBar({ state, descriptors, navigation }: any) {
+  // Function to handle AI button press with context from current screen
   const handleAIButtonPress = async () => {
     try {
-      const currentRoute = state.routes[state.index];
+      const currentScreenIndex = state.index;
+      const currentRoute = state.routes[currentScreenIndex];
+      
+      // If a rich aiContext was already published by the screen, use it.
       const existing = await AsyncStorage.getItem('aiContext');
       if (!existing) {
+        // Fallback: publish a minimal context so AI always has something
         const context = {
-          screen:
-            currentRoute.name === 'index'
-              ? 'home'
-              : currentRoute.name === 'portfolio'
-                ? 'portfolio'
-                : currentRoute.name === 'discover'
-                  ? 'trending'
-                  : currentRoute.name === 'settings'
-                    ? 'account'
-                    : 'portfolio',
+          screen: currentRoute.name === 'index' ? 'home'
+                : currentRoute.name === 'portfolio' ? 'portfolio'
+                : currentRoute.name === 'discover' ? 'trending'
+                : currentRoute.name === 'settings' ? 'account'
+                : 'home',
           data: null as any,
-          suggestion:
-            currentRoute.name === 'portfolio'
-              ? 'Ask about Portfolio DNA, what-if ranges, market regime, or your investing patterns.'
-              : currentRoute.name === 'index'
-                ? 'Ask about trending stocks or market themes.'
-                : currentRoute.name === 'discover'
-                  ? 'Ask about any stock; I will fetch cards and analyze.'
-                  : 'Ask about account or general investing.',
+          suggestion: currentRoute.name === 'index' ? 'Ask about trending stocks or market themes.'
+                   : currentRoute.name === 'portfolio' ? 'Ask about diversification, rebalancing, performance.'
+                   : currentRoute.name === 'discover' ? 'Ask about any stock; I’ll fetch cards and analyze.'
+                   : 'Ask about account or general investing.'
         };
         await AsyncStorage.setItem('aiContext', JSON.stringify(context));
       }
+
       router.push('/ai');
     } catch (error) {
       console.error('Error storing context:', error);
+      // Fallback to basic navigation
       router.push('/ai');
     }
   };
 
-  const renderTab = (tab: TabDef, marginStyle?: object) => {
-    const routeIndex = state.routes.findIndex((r: any) => r.name === tab.name);
-    if (routeIndex < 0) return null;
-    const route = state.routes[routeIndex];
-    const focused = state.index === routeIndex;
-
-    return (
-      <TouchableOpacity
-        key={route.key}
-        onPress={() => navigation.navigate(tab.name)}
-        style={[styles.navItem, marginStyle]}
-      >
-        <View style={styles.navItemContent}>
-          <FontAwesome name={tab.icon} size={24} color={focused ? '#17bf2d' : '#b8b8d2'} />
-          <Text style={[styles.navLabel, { color: focused ? '#17bf2d' : '#b8b8d2' }]}>
-            {tab.label}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
   return (
     <View style={styles.customNavBar}>
-      {renderTab(LEFT_TABS[0])}
-      {renderTab(LEFT_TABS[1], { marginRight: 40 })}
-
+      {/* Home */}
+      {state.routes[0] && (
+        <TouchableOpacity
+          key={state.routes[0].key}
+          onPress={() => navigation.navigate(state.routes[0].name)}
+          style={styles.navItem}
+        >
+          <View style={styles.navItemContent}>
+            <FontAwesome name="home" size={24} color={state.index === 0 ? '#17bf2d' : '#b8b8d2'} />
+            <Text style={[
+              styles.navLabel,
+              { color: state.index === 0 ? '#17bf2d' : '#b8b8d2' }
+            ]}>
+              Home
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* Portfolio */}
+      {state.routes[1] && (
+        <TouchableOpacity
+          key={state.routes[1].key}
+          onPress={() => navigation.navigate(state.routes[1].name)}
+          style={[styles.navItem, { marginRight: 40 }]}
+        >
+          <View style={styles.navItemContent}>
+            <FontAwesome name="briefcase" size={24} color={state.index === 1 ? '#17bf2d' : '#b8b8d2'} />
+            <Text style={[
+              styles.navLabel,
+              { color: state.index === 1 ? '#17bf2d' : '#b8b8d2' }
+            ]}>
+              Portfolio
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* Ask AI Button - larger and higher */}
       <TouchableOpacity style={styles.askAiButton} onPress={handleAIButtonPress}>
         <View style={styles.logoContainer}>
-          <Image
-            source={require('@/assets/images/logoImg.png')}
+          <Image 
+            source={require('@/assets/images/logoImg.png')} 
             style={styles.aiLogo}
             resizeMode="contain"
           />
         </View>
       </TouchableOpacity>
-
-      {renderTab(RIGHT_TABS[0], { marginLeft: 40 })}
-      {renderTab(RIGHT_TABS[1])}
+      
+      {/* Discover */}
+      {state.routes[2] && (
+        <TouchableOpacity
+          key={state.routes[2].key}
+          onPress={() => navigation.navigate(state.routes[2].name)}
+          style={[styles.navItem, { marginLeft: 40 }]}
+        >
+          <View style={styles.navItemContent}>
+            <FontAwesome name="compass" size={24} color={state.index === 2 ? '#17bf2d' : '#b8b8d2'} />
+            <Text style={[
+              styles.navLabel,
+              { color: state.index === 2 ? '#17bf2d' : '#b8b8d2' }
+            ]}>
+              Discover
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+      
+      {/* Account */}
+      {state.routes[3] && (
+        <TouchableOpacity
+          key={state.routes[3].key}
+          onPress={() => navigation.navigate(state.routes[3].name)}
+          style={styles.navItem}
+        >
+          <View style={styles.navItemContent}>
+            <FontAwesome name="user" size={24} color={state.index === 3 ? '#17bf2d' : '#b8b8d2'} />
+            <Text style={[
+              styles.navLabel,
+              { color: state.index === 3 ? '#17bf2d' : '#b8b8d2' }
+            ]}>
+              Account
+            </Text>
+          </View>
+        </TouchableOpacity>
+      )}
+      
     </View>
   );
 }
 
 export default function TabLayout() {
-  useColorScheme();
+  const colorScheme = useColorScheme();
 
   return (
     <Tabs
-      initialRouteName="portfolio"
       tabBar={(props) => <CustomTabBar {...props} />}
       screenOptions={{
+        // Disable the static render of the header on web
+        // to prevent a hydration error in React Navigation v6.
         headerShown: false,
-      }}
-    >
-      <Tabs.Screen
-        name="portfolio"
-        options={{
-          title: 'My Portfolio',
-          tabBarIcon: ({ color }) => <FontAwesome name="briefcase" size={24} color={color} />,
-        }}
-      />
+      }}>
+        
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Market',
-          tabBarIcon: ({ color }) => <FontAwesome name="line-chart" size={24} color={color} />,
+          title: 'Home',
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome name="home" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="portfolio"
+        options={{
+          title: 'Portfolio',
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome name="briefcase" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="discover"
         options={{
           title: 'Discover',
-          tabBarIcon: ({ color }) => <FontAwesome name="compass" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome name="compass" size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: 'Account',
-          tabBarIcon: ({ color }) => <FontAwesome name="user" size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <FontAwesome name="user" size={24} color={color} />
+          ),
         }}
       />
     </Tabs>
   );
+  
 }
 
 const styles = StyleSheet.create({
@@ -161,16 +205,15 @@ const styles = StyleSheet.create({
   navItem: {
     alignItems: 'center',
     flex: 1,
-    marginBottom: 15,
+    marginBottom: 15
   },
   navItemContent: {
     alignItems: 'center',
   },
   navLabel: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: 'Poppins',
     fontWeight: '500',
-    textAlign: 'center',
   },
   askAiButton: {
     width: 72,
@@ -190,20 +233,23 @@ const styles = StyleSheet.create({
     marginBottom: 6.7,
     marginLeft: -26,
   },
-  logoContainer: {
-    width: 52,
-    height: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#17bf2d',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1.0,
-    shadowRadius: 25,
-    elevation: 20,
-  },
+    logoContainer: {
+      width: 52,
+      height: 52,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#17bf2d',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 1.0,
+      shadowRadius: 25,
+      elevation: 20,
+    },
   aiLogo: {
     width: 45,
     height: 45,
     tintColor: '#17bf2d',
+  },
+  spacer: {
+    flex: 1,
   },
 });

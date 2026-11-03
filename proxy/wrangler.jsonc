@@ -1,0 +1,32 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "equinox-api-proxy",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+
+  // Not secret: only used to check that ID tokens were issued for this project.
+  "vars": {
+    "FIREBASE_PROJECT_ID": "stock-advisor-app"
+  },
+
+  // API keys are NOT configured here. Set them as secrets:
+  //   npx wrangler secret put GEMINI_API_KEY
+  //   npx wrangler secret put FINNHUB_API_KEY
+  //   npx wrangler secret put ALPHA_VANTAGE_API_KEY   (optional)
+  // For `wrangler dev`, put them in proxy/.dev.vars (gitignored).
+
+  // Per-user limits, keyed by Firebase uid. Counts are per Cloudflare location
+  // and approximate, which is fine for keeping one account from draining quota.
+  "ratelimits": [
+    {
+      "name": "AI_LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 20, "period": 60 }
+    },
+    {
+      "name": "DATA_LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 120, "period": 60 }
+    }
+  ]
+}

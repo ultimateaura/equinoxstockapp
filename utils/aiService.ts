@@ -1,14 +1,11 @@
-import { GoogleGenAI } from '@google/genai';
 import { NewsItem } from '../components/NewsCard';
-import { getGeminiApiKey } from './env';
+import { getGeminiClient } from './geminiClient';
 import { CompanyTickerMappingService } from './companyTickerMapping';
 import { dataFetcherService, FetchedData } from './dataFetcherService';
 import { queryRouterService, QueryRoutingDecision } from './queryRouterService';
 import { recommendationService } from './recommendationService';
 import { StockRecommendation } from './quant/types';
 
-const API_KEY = getGeminiApiKey();
-const genAI = new GoogleGenAI({ apiKey: API_KEY });
 
 interface EnrichedContext {
   originalContext: any;
@@ -279,7 +276,7 @@ export class AIService {
         parts: [{ text: query }]
       });
 
-      const result = await genAI.models.generateContent({
+      const result = await getGeminiClient().models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: systemInstruction + '\n\n' + query }] }],
         config: {
